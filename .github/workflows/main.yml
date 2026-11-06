@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Rozpakuj ZIP
         run: |
-          unzip -o "AudioQuarry-NATIVE-KOTLIN.zip" || unzip -o "*.zip"
+          unzip -o "*.zip" || true
           ls -la
           if [ -d "AudioQuarry-NATIVE-KOTLIN" ]; then cp -r AudioQuarry-NATIVE-KOTLIN/* .; fi
           if [ -d "AudioQuarry-NATIVE-ANDROID" ]; then cp -r AudioQuarry-NATIVE-ANDROID/* .; fi
@@ -16,10 +16,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
       - name: Buduj APK
-        run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+        run: gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: AudioQuarry-APK
