@@ -2,25 +2,30 @@ name: Build APK
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Rozpakuj ZIP
+      - name: Rozpakuj
         run: |
-          unzip -o "*.zip" || true
           ls -la
-          if [ -d "AudioQuarry-NATIVE-KOTLIN" ]; then cp -r AudioQuarry-NATIVE-KOTLIN/* .; fi
-          if [ -d "AudioQuarry-NATIVE-ANDROID" ]; then cp -r AudioQuarry-NATIVE-ANDROID/* .; fi
+          unzip -o *.zip
           ls -la
-      - uses: actions/setup-java@v4
+          for d in */; do if [ -f "$d/settings.gradle.kts" ]; then echo "Znalazlem $d"; cp -r "$d"* .; fi; done
+          ls -la
+          cat settings.gradle.kts
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: '8.2'
-      - name: Buduj APK
+      - name: Instaluj Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.5-bin.zip
+          unzip -q gradle-8.5-bin.zip
+          echo "$PWD/gradle-8.5/bin" >> $GITHUB_PATH
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "SDK w: $ANDROID_HOME"
+          ls $ANDROID_HOME
+      - name: Buduj
         run: gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
